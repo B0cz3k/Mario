@@ -7,10 +7,6 @@ from gym.wrappers import FrameStack
 from nes_py.wrappers import JoypadSpace
 
 # Files
-# from agent import Mario
-# Transfer learning freezes all but the last 3 layers in order to adapt the model to more than 1 level
-# Hope it works xD
-from agent_transfer_learning import Mario
 from wrappers import SkipFrame, GrayScaleObservation, ResizeObservation
 from logger import MetricLogger
 
@@ -19,7 +15,12 @@ from pathlib import Path
 import datetime
 
 # Define the environment with wrappers
-env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0', apply_api_compatibility=True, render_mode='human')
+level = input("Choose the level (from 1-1 to 8-4): ")
+
+if len(level) != 3 or int(level[0]) not in [1, 2, 3, 4, 5, 6, 7, 8] or level[1] != '-' or int(level[2]) not in [1, 2, 3, 4]:
+    raise ValueError('Wrong level format.')
+
+env = gym_super_mario_bros.make(f'SuperMarioBros-{level}-v0', apply_api_compatibility=True, render_mode='human')
 env = JoypadSpace(env, COMPLEX_MOVEMENT)
 env = SkipFrame(env, skip=5)
 env = GrayScaleObservation(env)
@@ -29,6 +30,14 @@ env = FrameStack(env, num_stack=5)
 save_dir = Path('Checkpoints') / datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 save_dir.mkdir(parents=True)
 checkpoint = None # Path('Checkpoints/2023-04-28 00-50-31/mario0.chkpt')
+
+# Transfer Learning if agent is already trained on some levels
+if input("Freeze CNN layers? (Yes, if agent is already trained on 1 level) [y/n]: ") == 'y':
+    print('Loading Mario with CNN layers freezed...')
+    from agent_transfer_learning import Mario
+else:
+    print('Loading standard Mario...')
+    from agent import Mario
 
 # Initiate Agent with Logger
 mario = Mario(state_dim=(5, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=checkpoint)
@@ -56,7 +65,7 @@ for e in range(episodes):
                 break
 
         except KeyboardInterrupt as exc:
-            save = input('Do you want to save the progress? [y/n]')
+            save = input('Do you want to save the progress? [y/n]: ')
             if save == 'y':
                 mario.save()
             env.close()
