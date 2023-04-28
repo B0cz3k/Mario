@@ -7,7 +7,10 @@ from gym.wrappers import FrameStack
 from nes_py.wrappers import JoypadSpace
 
 # Files
-from agent import Mario
+# from agent import Mario
+# Transfer learning freezes all but the last 3 layers in order to adapt the model to more than 1 level
+# Hope it works xD
+from agent_transfer_learning import Mario
 from wrappers import SkipFrame, GrayScaleObservation, ResizeObservation
 from logger import MetricLogger
 

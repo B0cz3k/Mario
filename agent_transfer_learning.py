@@ -183,6 +183,11 @@ class Mario:
 
         print(f"Loading Mario at {load_path} with exploration rate {exploration_rate}")
         self.net.load_state_dict(state_dict)
+
+        for i, param in enumerate(self.net.online.parameters()):
+            if i < len(list(self.net.online.parameters())) - 6:
+                param.requires_grad = False
+
         self.exploration_rate = exploration_rate
 
 
