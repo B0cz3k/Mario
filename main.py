@@ -1,6 +1,6 @@
 # Gym
 import gym_super_mario_bros
-from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
+from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from gym.wrappers import FrameStack
 
 # Wrappers
@@ -13,6 +13,7 @@ from logger import MetricLogger
 # Others
 from pathlib import Path
 import datetime
+import torch
 
 # Define the environment with wrappers
 level = input("Choose the level (from 1-1 to 8-4): ")
@@ -21,15 +22,15 @@ if len(level) != 3 or int(level[0]) not in [1, 2, 3, 4, 5, 6, 7, 8] or level[1] 
     raise ValueError('Wrong level format.')
 
 env = gym_super_mario_bros.make(f'SuperMarioBros-{level}-v0', apply_api_compatibility=True, render_mode='human')
-env = JoypadSpace(env, COMPLEX_MOVEMENT)
-env = SkipFrame(env, skip=5)
+env = JoypadSpace(env, SIMPLE_MOVEMENT)
+env = SkipFrame(env, skip=4)
 env = GrayScaleObservation(env)
 env = ResizeObservation(env, shape=84)
-env = FrameStack(env, num_stack=5)
+env = FrameStack(env, num_stack=4)
 
 save_dir = Path('Checkpoints') / datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 save_dir.mkdir(parents=True)
-checkpoint = None # Path('Checkpoints/2023-04-28 00-50-31/mario0.chkpt')
+checkpoint = Path('Checkpoints/2023-04-29 18-56-44/mario1.chkpt')
 
 # Transfer Learning if agent is already trained on some levels
 if input("Freeze CNN layers? (Yes, if agent is already trained on 1 level) [y/n]: ") == 'y':
@@ -40,7 +41,7 @@ else:
     from agent import Mario
 
 # Initiate Agent with Logger
-mario = Mario(state_dim=(5, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=checkpoint)
+mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=checkpoint)
 logger = MetricLogger(save_dir)
 
 episodes = 40000
@@ -51,6 +52,8 @@ for e in range(episodes):
 
     while True:
         try:
+            torch.cuda.empty_cache()
+
             action = mario.act(state) # Mario acts depending on his current state
 
             next_state, reward, terminated, truncated, info = env.step(action)
@@ -61,7 +64,8 @@ for e in range(episodes):
             state = next_state # Update the state
 
             if terminated or truncated or info['flag_get']:
-                print(f'Reward: {reward}')
+                print(f'Reward: {logger.curr_ep_reward}')
+                print(f"GPU memory usage: {torch.cuda.memory_allocated(device='cuda') / 1024**2:.2f} MB")
                 break
 
         except KeyboardInterrupt as exc:

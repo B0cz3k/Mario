@@ -60,8 +60,8 @@ class Mario:
         self.curr_step = 0
 
         self.save_every = 5e5  # no. of experiences between saving Mario Net
-        self.memory = deque(maxlen=100000)
-        self.batch_size = 32
+        self.memory = deque(maxlen=30000)
+        self.batch_size = 16
 
         self.burnin = 1e4  # min. experiences before training
         self.learn_every = 3  # no. of experiences between updates to Q_online
@@ -171,7 +171,8 @@ class Mario:
             save_path,
         )
         print(f"Mario saved to {save_path} at step {self.curr_step}")
-    
+
+  
     def load(self, load_path):
         '''Load the checkpoint'''
         if not load_path.exists():
@@ -181,13 +182,12 @@ class Mario:
         exploration_rate = ckp.get('exploration_rate')
         state_dict = ckp.get('model')
 
-        print(f"Loading Mario at {load_path} with exploration rate {exploration_rate}")
-        self.net.load_state_dict(state_dict)
-
         for i, param in enumerate(self.net.online.parameters()):
             if i < len(list(self.net.online.parameters())) - 6:
                 param.requires_grad = False
 
+        print(f"Loading Mario at {load_path} with exploration rate {exploration_rate}")
+        self.net.load_state_dict(state_dict)
         self.exploration_rate = exploration_rate
 
 

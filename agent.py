@@ -60,8 +60,8 @@ class Mario:
         self.curr_step = 0
 
         self.save_every = 5e5  # no. of experiences between saving Mario Net
-        self.memory = deque(maxlen=100000)
-        self.batch_size = 32
+        self.memory = deque(maxlen=30000)
+        self.batch_size = 16
 
         self.burnin = 1e4  # min. experiences before training
         self.learn_every = 3  # no. of experiences between updates to Q_online
@@ -171,7 +171,8 @@ class Mario:
             save_path,
         )
         print(f"Mario saved to {save_path} at step {self.curr_step}")
-    
+
+  
     def load(self, load_path):
         '''Load the checkpoint'''
         if not load_path.exists():
