@@ -30,7 +30,7 @@ env = FrameStack(env, num_stack=4)
 
 save_dir = Path('Checkpoints') / datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
 save_dir.mkdir(parents=True)
-checkpoint = Path('Checkpoints/2023-04-29 18-56-44/mario1.chkpt')
+checkpoint = Path('Checkpoints/2023-05-03 20-42-24/mario0.chkpt')
 
 # Transfer Learning if agent is already trained on some levels
 if input("Freeze CNN layers? (Yes, if agent is already trained on 1 level) [y/n]: ") == 'y':
